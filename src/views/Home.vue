@@ -13,7 +13,7 @@
             <div class="io-card">
               <div class="code-txt">
                 <div class="top-button">
-                  <el-button type="success" icon="el-icon-s-promotion" size="small" @click="runCompiler">点击运行
+                  <el-button type="success" icon="el-icon-s-promotion" size="small" @click="runCompiler" :loading="loadingBtn">点击运行
                   </el-button>
                   <el-button type="warning" icon="el-icon-brush" size="small" plain style="margin-left: 20px"
                              @click="clearCode">清空
@@ -52,7 +52,7 @@
         </div>
       </el-main>
       <el-footer>
-        <el-tag type="success" style="margin-top: 10px">Build Message:</el-tag>
+        <el-tag :type="buildType" style="margin-top: 10px">Build Message:</el-tag>
         <div id="build-message">
           <el-input
                     type="textarea"
@@ -139,7 +139,7 @@
     },
     data() {
       return {
-        code: `int bbb = 222; ,\nreal ccc = 111; if(bbb > 0 )\nwhile ( )`,
+        code: `{\n int b = 100;\n real c = 0; \n while ( b > 0 ) {\n  c = c + b;\n  b = b -1;\n }\n}`,
         cmOption: {
           tabSize: 4,
           styleActiveLine: true,
@@ -151,7 +151,9 @@
         lightTheme: false,
         resText: '',
         radio: 1,
-        buildMessage: ''
+        buildMessage: '',
+        loadingBtn: false,
+        buildType: 'info',
       }
     },
     methods: {
@@ -160,8 +162,10 @@
         else this.cmOption.theme = 'solarized light'
       },
       async runCompiler() {
+        this.buildType = 'info';
         if (this.code === '')
           return this.$message.info('请先输入代码再点击运行');
+        this.loadingBtn = true;
         let config = {
           method: 'post',
           url: 'http://localhost:8020/build',
@@ -172,17 +176,15 @@
         };
         const {data: res} = await this.$axios(config);
         console.log('返回信息',res);
-        // let res = {
-        //   symbolTable: "a 100.0\njint 0.0\n",
-        //   buildMessage: "BUILD SUCCESS!",
-        //   tokenList: "{ DELIMITER 0 0\r\na ID 1 4\r\n= OPERATOR 1 6\r\n0 NUM 1 8\r\n; DELIMITER 1 9\r\nwhile KEYWORD 2 4\r\n( DELIMITER 2 9\r\na ID 2 10\r\n< OPERATOR 2 12\r\n100 NUM 2 14\r\n) DELIMITER 2 17\r\n{ DELIMITER 2 18\r\na ID 3 8\r\n= OPERATOR 3 10\r\na ID 3 12\r\n+ OPERATOR 3 13\r\n1 NUM 3 14\r\n; DELIMITER 3 15\r\n} DELIMITER 4 4\r\n} DELIMITER 5 0\r\n",
-        //   parseTree: "program\ncompoundstmt\n{\nstmts\nstmt\nassgstmt\na\n=\narithexpr\nmultexpr\nsimpleexpr\n0\nmultexprprime\n?\narithexprprime\n?\n;\nstmts\nstmt\nwhilestmt\nwhile\n(\nboolexpr\narithexpr\nmultexpr\nsimpleexpr\na\nmultexprprime\n?\narithexprprime\n?\nboolop\n<\narithexpr\nmultexpr\nsimpleexpr\n100\nmultexprprime\n?\narithexprprime\n?\n)\nstmt\ncompoundstmt\n{\nstmts\nstmt\nassgstmt\na\n=\narithexpr\nmultexpr\nsimpleexpr\na\nmultexprprime\n?\narithexprprime\n+\nmultexpr\nsimpleexpr\n1\nmultexprprime\n?\narithexprprime\n?\n;\nstmts\n?\n}\nstmts\n?\n}\n",
-        //   interCode: "a=0\nL0\nif a>=100 goto L1\ngoto L0\nL1\n"
-        // };
         allResTxt = res;
         this.radio = 1;
         this.resText = res.tokenList;
         this.buildMessage = res.buildMessage;
+        if(this.buildMessage.indexOf('BUILD SUCCESS') !== -1)
+          this.buildType = 'success';
+        else
+          this.buildType = 'danger';
+        this.loadingBtn = false;
       },
       async clearCode() {
         const confirmResult = await this.$confirm(
@@ -251,15 +253,6 @@
   .el-main {
     background-color: #eaedf1;
     height: 100%;
-  }
-
-  .el-textarea__inner{
-    font-family:"Microsoft",serif;
-    font-size: 20px;
-  }
-
-  .el-textarea__inner,.el-input__inner{
-    background: transparent;
   }
 
   .top-button {
