@@ -132,6 +132,7 @@
       }
     }
   });
+
   export default {
     name: 'Home',
     components: {
@@ -163,6 +164,7 @@
       },
       async runCompiler() {
         this.buildType = 'info';
+        this.buildMessage = '';
         if (this.code === '')
           return this.$message.info('请先输入代码再点击运行');
         this.loadingBtn = true;
@@ -174,6 +176,7 @@
           },
           data : this.code
         };
+        console.log('发送过去的信息',config);
         const {data: res} = await this.$axios(config);
         console.log('返回信息',res);
         allResTxt = res;
@@ -244,7 +247,7 @@
       align-items: center;
 
       > span {
-        margin-left: 30px;
+        margin-left: 25px;
         font-weight: 700;
       }
     }
